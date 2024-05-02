@@ -5,12 +5,12 @@ SCRIPT_DIR=$(dirname "$(realpath $0)")
 ASTRA_SIM_DIR="${SCRIPT_DIR:?}"/../../astra-sim
 NS3_DIR="${SCRIPT_DIR:?}"/../../extern/network_backend/ns-3
 # Inputs - change as necessary.
-WORKLOAD="${SCRIPT_DIR:?}"/../../extern/graph_frontend/chakra/one_comm_coll_node_allgather
-SYSTEM="${SCRIPT_DIR:?}"/../../inputs/system/Switch.json
+WORKLOAD="${SCRIPT_DIR:?}"/../../inputs/workload/num_npu_128/one_comm_coll_node_alltoall
+SYSTEM="${SCRIPT_DIR:?}"/../../inputs/system/my_system_input.json
 MEMORY="${SCRIPT_DIR:?}"/../../inputs/remote_memory/analytical/no_memory_expansion.json
-LOGICAL_TOPOLOGY="${SCRIPT_DIR:?}"/../../inputs/network/ns3/sample_8nodes_1D.json
+LOGICAL_TOPOLOGY="${SCRIPT_DIR:?}"/../../inputs/network/ns3/sample_128nodes_2D.json
 # Note that ONLY this file is relative to NS3_DIR/simulation
-NETWORK="../../../ns-3/scratch/config/config.txt"
+NETWORK="../../../ns-3/scratch/config/config_128nodes.txt"
 # Functions
 function setup {
     protoc et_def.proto\
