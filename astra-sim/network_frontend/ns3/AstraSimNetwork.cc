@@ -1,10 +1,10 @@
 #include "astra-sim/system/AstraNetworkAPI.hh"
 #include "astra-sim/system/Sys.hh"
 #include "ns3/applications-module.h"
-#include "ns3/core-module.h"
-#include "ns3/csma-module.h"
-#include "ns3/internet-module.h"
-#include "ns3/network-module.h"
+// #include "ns3/core-module.h"
+// #include "ns3/csma-module.h"
+// #include "ns3/internet-module.h"
+// #include "ns3/network-module.h"
 #include "entry.h"
 #include <execinfo.h>
 #include <fstream>
@@ -19,8 +19,10 @@
 using namespace std;
 using namespace ns3;
 
-std::vector<string> workloads{"microAllReduce.txt", "microAllToAll.txt"};
-std::vector<std::vector<int>> physical_dims{{8, 4}, {8, 4}};
+// std::vector<string> workloads{"microAllReduce.txt", "microAllToAll.txt"};
+// std::vector<std::vector<int>> physical_dims{{8, 4}, {8, 4}};
+std::vector<string> workloads{"microAllReduce.txt"};
+std::vector<std::vector<int>> physical_dims{{2,1}};
 
 queue<struct task1> workerQueue;
 unsigned long long tempcnt = 999;
@@ -61,8 +63,12 @@ public:
   double sim_time_resolution() { return 0; }
   int sim_init(AstraSim::AstraMemoryAPI *MEM) { return 0; }
   AstraSim::timespec_t sim_get_time() {
+    // AstraSim::timespec_t timeSpec;
+    // timeSpec.time_val = Simulator::Now().GetNanoSeconds();
+    // return timeSpec;
+    // to do
     AstraSim::timespec_t timeSpec;
-    timeSpec.time_val = Simulator::Now().GetNanoSeconds();
+    timeSpec.time_val = 0;
     return timeSpec;
   }
   virtual void sim_schedule(AstraSim::timespec_t delta,
@@ -72,7 +78,9 @@ public:
     t.fun_arg = fun_arg;
     t.msg_handler = fun_ptr;
     t.schTime = delta.time_val;
-    Simulator::Schedule(NanoSeconds(t.schTime), t.msg_handler, t.fun_arg);
+    // to do
+    // Simulator::Schedule(NanoSeconds(t.schTime), t.msg_handler, t.fun_arg);
+    printf("sim_schedule: %f\n", delta.time_val);
     return;
   }
   virtual int sim_send(void *buffer,   // not yet used
@@ -95,6 +103,7 @@ public:
     t.msg_handler = msg_handler;
     sentHash[make_pair(tag, make_pair(t.src, t.dest))] = t;
     SendFlow(rank, dst, count, msg_handler, fun_arg, tag);
+    printf("sim_send: %f\n", 0.0);
     return 0;
   }
   virtual int sim_recv(void *buffer, uint64_t count, int type, int src, int tag,
@@ -141,6 +150,8 @@ public:
 };
 
 int main(int argc, char *argv[]) {
+
+  printf("Start....\n");
   float comm_scale = 1;
 
   CommandLine cmd;
@@ -209,14 +220,17 @@ int main(int argc, char *argv[]) {
     }
     npu_offset += job_npus;
   }
-  main1(argc, argv);
+  // main1(argc, argv);
   // pass number of nodes
   for (int i = 0; i < num_gpus; i++) {
     systems[i]->workload->fire();
   }
-  Simulator::Run();
-  // Simulator::Stop(TimeStep (0x7fffffffffffffffLL));
-  Simulator::Stop(Seconds(2000000000));
-  Simulator::Destroy();
+
+  // to do
+  // Simulator::Run();
+  // // Simulator::Stop(TimeStep (0x7fffffffffffffffLL));
+  // Simulator::Stop(Seconds(2000000000));
+  // Simulator::Destroy();
+  printf("End....\n");
   return 0;
 }
