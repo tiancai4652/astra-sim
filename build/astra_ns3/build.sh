@@ -35,7 +35,7 @@ function compile {
     cp "${ASTRA_SIM_DIR}"/network_frontend/ns3/AstraSimNetwork.cc "${NS3_DIR}"/simulation/scratch/
     cp "${ASTRA_SIM_DIR}"/network_frontend/ns3/*.h "${NS3_DIR}"/simulation/scratch/
     cd "${NS3_DIR}/simulation"
-    CC='gcc-4.9' CXX='g++-4.9' ./waf configure 
+    CC='gcc-4.9' CXX='g++-4.9' ./waf configure --enable-examples --enable-tests --debug
     ./waf --run 'scratch/AstraSimNetwork mix/config.txt --commscale=1'
     cd "${SCRIPT_DIR:?}"
 }

@@ -16,8 +16,14 @@
 #include <unistd.h>
 #include <vector>
 
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <semaphore.h>
+#include <unistd.h>
+#include <iostream>
+
 using namespace std;
-using namespace ns3;
+// using namespace ns3;
 
 // std::vector<string> workloads{"microAllReduce.txt", "microAllToAll.txt"};
 // std::vector<std::vector<int>> physical_dims{{8, 4}, {8, 4}};
@@ -149,6 +155,95 @@ public:
   }
 };
 
+
+
+// set shared memory size,less than 100 default.
+int numMessages=2;
+
+class MadronaMsg{
+public:
+int type;
+int event_id;
+int time;
+int src;
+int dst;
+int size;
+// 为 std::cout 添加输出流重载
+    friend std::ostream& operator<<(std::ostream& os, const MadronaMsg& msg) {
+        return os << "MadronaMsg{type: " << msg.type
+                  << ", event_id: " << msg.event_id
+                  << ", time: " << msg.time
+                  << ", src: " << msg.src
+                  << ", dst: " << msg.dst
+                  << ", size: " << msg.size << "}";
+    }
+};
+
+void comm() {
+    int shm_fd = shm_open("myshm", O_CREAT | O_RDWR, 0666);
+    if (shm_fd == -1) {
+        perror("shm_open");
+        return;
+    }
+
+    int size = sizeof(MadronaMsg) * numMessages;
+    long pageSize = sysconf(_SC_PAGESIZE);
+    long offset =
+        (sizeof(int) / pageSize + 1) * pageSize; // 确保偏移量是页面大小的倍数
+    int totalSize = offset + size; // 计算必须涵盖整个数据区域和偏移
+
+    if (ftruncate(shm_fd, totalSize) == -1) {
+      perror("ftruncate");
+      close(shm_fd);
+      return;
+    }
+
+    int* header = (int*) mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (header == MAP_FAILED) {
+        perror("mmap header");
+        close(shm_fd);
+        return;
+    }
+    *header = numMessages;
+
+    MadronaMsg* data = (MadronaMsg*) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, offset);
+    if (data == MAP_FAILED) {
+        perror("mmap data");
+        munmap(header, sizeof(int));
+        close(shm_fd);
+        return;
+    }
+
+    for (int i = 0; i < numMessages; i++) {
+        data[i].type = i;
+        data[i].event_id = i + 100;
+        data[i].time = i * 1000;
+        data[i].src = i * 10;
+        data[i].dst = i * 20;
+        data[i].size = i * 30;
+    }
+
+    std::cout << "C++: Data written to shared memory: " << data[0] << std::endl;
+
+    sem_t* semaphore_a = sem_open("semA", O_CREAT, 0666, 0);
+    sem_t* semaphore_b = sem_open("semB", O_CREAT, 0666, 0);
+    sem_post(semaphore_a);
+    sem_wait(semaphore_b);
+    std::cout << "C++: Received from Python: " << data[0] << std::endl;
+
+    munmap(data, sizeof(MadronaMsg) * numMessages);
+    munmap(header, sizeof(int));
+    shm_unlink("myshm");
+    sem_close(semaphore_a);
+    sem_close(semaphore_b);
+    sem_unlink("semA");
+    sem_unlink("semB");
+    close(shm_fd);
+}
+
+
+
+
 int main(int argc, char *argv[]) {
 
   printf("Start....\n");
@@ -231,6 +326,10 @@ int main(int argc, char *argv[]) {
   // // Simulator::Stop(TimeStep (0x7fffffffffffffffLL));
   // Simulator::Stop(Seconds(2000000000));
   // Simulator::Destroy();
+  printf("Start Comm....\n");
+  comm();
   printf("End....\n");
+  
   return 0;
 }
+
