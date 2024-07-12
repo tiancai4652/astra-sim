@@ -158,7 +158,7 @@ public:
 
 
 // set shared memory size,less than 100 default.
-int numMessages=2;
+int numMessages=10;
 
 class MadronaMsg{
 public:
@@ -180,40 +180,35 @@ int size;
 };
 
 void comm() {
+
+    int size = sizeof(MadronaMsg) * numMessages + sizeof(int);
+    printf("size:%hd\n", size); 
     int shm_fd = shm_open("myshm", O_CREAT | O_RDWR, 0666);
     if (shm_fd == -1) {
         perror("shm_open");
         return;
     }
 
-    int size = sizeof(MadronaMsg) * numMessages;
-    long pageSize = sysconf(_SC_PAGESIZE);
-    long offset =
-        (sizeof(int) / pageSize + 1) * pageSize; // 确保偏移量是页面大小的倍数
-    int totalSize = offset + size; // 计算必须涵盖整个数据区域和偏移
-
-    if (ftruncate(shm_fd, totalSize) == -1) {
-      perror("ftruncate");
-      close(shm_fd);
-      return;
-    }
-
-    int* header = (int*) mmap(0, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-    if (header == MAP_FAILED) {
-        perror("mmap header");
+    if (ftruncate(shm_fd, size) == -1) {
+        perror("ftruncate");
         close(shm_fd);
         return;
     }
+
+    // 映射整个内存区域
+    void* addr = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (addr == MAP_FAILED) {
+        perror("mmap");
+        close(shm_fd);
+        return;
+    }
+
+    // 访问头部信息（消息数量）
+    int* header = (int*) addr;
     *header = numMessages;
 
-    MadronaMsg* data = (MadronaMsg*) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, offset);
-    if (data == MAP_FAILED) {
-        perror("mmap data");
-        munmap(header, sizeof(int));
-        close(shm_fd);
-        return;
-    }
-
+    // 访问 MadronaMsg 数组
+    MadronaMsg* data = (MadronaMsg*) (header + 1);  // 利用指针偏移，跳过一个 int 的位置
     for (int i = 0; i < numMessages; i++) {
         data[i].type = i;
         data[i].event_id = i + 100;
@@ -223,7 +218,9 @@ void comm() {
         data[i].size = i * 30;
     }
 
+    std::cout << "size: " << size << std::endl;
     std::cout << "C++: Data written to shared memory: " << data[0] << std::endl;
+
 
     sem_t* semaphore_a = sem_open("semA", O_CREAT, 0666, 0);
     sem_t* semaphore_b = sem_open("semB", O_CREAT, 0666, 0);
