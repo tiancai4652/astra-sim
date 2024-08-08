@@ -134,43 +134,43 @@ void notify_sender_sending_finished(int sender_node, int receiver_node,
 }
 
 // to do 
-// void qp_finish(FILE *fout, Ptr<RdmaQueuePair> q) {
-//   printf("qp_finish\n");
-//   uint32_t sid = ip_to_node_id(q->sip), did = ip_to_node_id(q->dip);
-//   uint64_t base_rtt = pairRtt[sid][did], b = pairBw[sid][did];
-//   uint32_t total_bytes =
-//       q->m_size +
-//       ((q->m_size - 1) / packet_payload_size + 1) *
-//           (CustomHeader::GetStaticWholeHeaderSize() -
-//            IntHeader::GetStaticSize()); // translate to the minimum bytes
-//                                         // required (with header but no INT)
-//   uint64_t standalone_fct = base_rtt + total_bytes * 8000000000lu / b;
-//   // sip, dip, sport, dport, size (B), start_time, fct (ns), standalone_fct (ns)
-//   fprintf(fout, "%08x %08x %u %u %lu %lu %lu %lu\n", q->sip.Get(), q->dip.Get(),
-//           q->sport, q->dport, q->m_size, q->startTime.GetTimeStep(),
-//           (Simulator::Now() - q->startTime).GetTimeStep(), standalone_fct);
-//   fflush(fout);
+void qp_finish(FILE *fout, Ptr<RdmaQueuePair> q) {
+  printf("qp_finish\n");
+  // uint32_t sid = ip_to_node_id(q->sip), did = ip_to_node_id(q->dip);
+  // uint64_t base_rtt = pairRtt[sid][did], b = pairBw[sid][did];
+  // uint32_t total_bytes =
+  //     q->m_size +
+  //     ((q->m_size - 1) / packet_payload_size + 1) *
+  //         (CustomHeader::GetStaticWholeHeaderSize() -
+  //          IntHeader::GetStaticSize()); // translate to the minimum bytes
+  //                                       // required (with header but no INT)
+  // uint64_t standalone_fct = base_rtt + total_bytes * 8000000000lu / b;
+  // // sip, dip, sport, dport, size (B), start_time, fct (ns), standalone_fct (ns)
+  // fprintf(fout, "%08x %08x %u %u %lu %lu %lu %lu\n", q->sip.Get(), q->dip.Get(),
+  //         q->sport, q->dport, q->m_size, q->startTime.GetTimeStep(),
+  //         (Simulator::Now() - q->startTime).GetTimeStep(), standalone_fct);
+  // fflush(fout);
 
-//   // std::cout << " " << sid << " " << did << " " << q->sport << " " << q->dport
-//   //           << " " << q->m_size << std::endl;
-//   // remove rxQp from the receiver
-//   Ptr<Node> dstNode = n.Get(did);
-//   Ptr<RdmaDriver> rdma = dstNode->GetObject<RdmaDriver>();
-//   rdma->m_rdma->DeleteRxQp(q->sip.Get(), q->m_pg, q->sport);
+  // // std::cout << " " << sid << " " << did << " " << q->sport << " " << q->dport
+  // //           << " " << q->m_size << std::endl;
+  // // remove rxQp from the receiver
+  // Ptr<Node> dstNode = n.Get(did);
+  // Ptr<RdmaDriver> rdma = dstNode->GetObject<RdmaDriver>();
+  // rdma->m_rdma->DeleteRxQp(q->sip.Get(), q->m_pg, q->sport);
 
-//   if (sender_src_port_map.find(make_pair(q->sport, make_pair(sid, did))) ==
-//       sender_src_port_map.end()) {
-//     std::cout << "could not find the tag, there must be something wrong"
-//               << std::endl;
-//     exit(-1);
-//   }
-//   int tag = sender_src_port_map[make_pair(q->sport, make_pair(sid, did))];
-//   sender_src_port_map.erase(make_pair(q->sport, make_pair(sid, did)));
-//   // let sender knows that the flow finishes;
-//   notify_sender_sending_finished(sid, did, q->m_size, tag);
-//   // let receiver knows that it receives packets;
-//   notify_receiver_receive_data(sid, did, q->m_size, tag);
-// }
+  // if (sender_src_port_map.find(make_pair(q->sport, make_pair(sid, did))) ==
+  //     sender_src_port_map.end()) {
+  //   std::cout << "could not find the tag, there must be something wrong"
+  //             << std::endl;
+  //   exit(-1);
+  // }
+  // int tag = sender_src_port_map[make_pair(q->sport, make_pair(sid, did))];
+  // sender_src_port_map.erase(make_pair(q->sport, make_pair(sid, did)));
+  // // let sender knows that the flow finishes;
+  // notify_sender_sending_finished(sid, did, q->m_size, tag);
+  // // let receiver knows that it receives packets;
+  // notify_receiver_receive_data(sid, did, q->m_size, tag);
+}
 
 // int main1(int argc, char *argv[]) {
 //   ////std:://cout<<"testThird\n"

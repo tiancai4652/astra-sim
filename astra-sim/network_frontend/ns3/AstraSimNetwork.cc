@@ -50,12 +50,13 @@ unsigned long long cnt = 0;
     int src;
     int dst;
     int size;
+    int port;
     // 为 std::cout 添加输出流重载
     friend std::ostream& operator<<(std::ostream& os, const MadronaMsg& msg) {
       return os << "MadronaMsg{type: " << msg.type
                 << ", event_id: " << msg.event_id << ", time: " << msg.time
                 << ", src: " << msg.src << ", dst: " << msg.dst
-                << ", size: " << msg.size << "}";
+                << ", port: " << msg.port << ", size: " << msg.size << "}";
     }
   };
 
@@ -153,7 +154,8 @@ unsigned long long cnt = 0;
       int type,
       int src = 0,
       int dst = 0,
-      int size = 0) {
+      int size = 0,
+      int port = 0) {
     *header = numMessages;
     data = (MadronaMsg*)(header + 1); // jump count location.
     data[0].type = type;
@@ -162,7 +164,7 @@ unsigned long long cnt = 0;
     data[0].src = src;
     data[0].dst = dst;
     data[0].size = size;
-
+    data[0].port = port;
     std::cout << "size: " << size << std::endl;
     std::cout << "AstraSim: Data written to Madrona: " << data[0] << std::endl;
 
@@ -183,7 +185,8 @@ unsigned long long cnt = 0;
       int type,
       int src = 0,
       int dst = 0,
-      int size = 0) {
+      int size = 0,
+      int port=0) {
     *header = numMessages;
     data = (MadronaMsg*)(header + 1); // jump count location.
     data[0].type = type;
@@ -192,6 +195,7 @@ unsigned long long cnt = 0;
     data[0].src = src;
     data[0].dst = dst;
     data[0].size = size;
+    data[0].port = port;
 
     std::cout << "size: " << size << std::endl;
     std::cout << "AstraSim: Data written to Madrona: " << data[0] << std::endl;
@@ -319,7 +323,15 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     // SendFlow(rank, dst, count, msg_handler, fun_arg, tag);
     event_id++;
     commTaskHash[event_id] = t;
-    comm_send_wait_callback(event_id, 0, 0, rank, dst, count);
+
+    // entry.cc
+    uint32_t port = portNumber[rank][dst]++; // get a new port number
+    sender_src_port_map[make_pair(port, make_pair(rank, dst))] = tag;
+    int pg = 3, dport = 100;
+    flow_input.idx++;
+
+
+    comm_send_wait_callback(event_id, 0, 0, rank, dst, count,port);
     printf("sim_send: %f\n", 0.0);
     return 0;
   }
@@ -461,6 +473,17 @@ int main(int argc, char* argv[]) {
   // printf("Start Comm....\n");
   // comm();
   // printf("End....\n");
+
+  //to do
+  //push madrona run next frame
+  //event type == -100
+  while(true)
+  {
+    event_id++;
+    int type=-100;
+    comm_send_wait_callback(event_id, 0, type, 0, 0, 0);
+  }
+
 
   return 0;
 }
