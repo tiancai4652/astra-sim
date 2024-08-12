@@ -1397,6 +1397,7 @@ DataSet* Sys::generate_collective(
   return dataset;
 }
 void Sys::call_events() {
+  printf("call_events:call_events:%d\n",pending_events);
   if(event_queue.find(Sys::boostedTick())==event_queue.end())
     goto FINISH_CHECK;
   for (auto& callable : event_queue[Sys::boostedTick()]) {
