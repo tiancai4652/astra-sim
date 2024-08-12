@@ -165,12 +165,12 @@ unsigned long long cnt = 0;
     data[0].dst = dst;
     data[0].size = size;
     data[0].port = port;
-    std::cout << "size: " << size << std::endl;
-    std::cout << "AstraSim: Data written to Madrona: " << data[0] << std::endl;
+    // std::cout << "size: " << size << std::endl;
+    // std::cout << "AstraSim: Data written to Madrona: " << data[0] << std::endl;
 
     sem_post(semaphore_a);
     sem_wait(semaphore_b);
-    std::cout << "AstraSim: Received from Madrona: " << data[0] << std::endl;
+    // std::cout << "AstraSim: Received from Madrona: " << data[0] << std::endl;
 
     if (commTaskHash.find(data[0].event_id) != commTaskHash.end()) {
       task1 t = commTaskHash[data[0].event_id];
@@ -197,12 +197,12 @@ unsigned long long cnt = 0;
     data[0].size = size;
     data[0].port = port;
 
-    std::cout << "size: " << size << std::endl;
-    std::cout << "AstraSim: Data written to Madrona: " << data[0] << std::endl;
+    // std::cout << "size: " << size << std::endl;
+    // std::cout << "AstraSim: Data written to Madrona: " << data[0] << std::endl;
 
     sem_post(semaphore_a);
     sem_wait(semaphore_b);
-    std::cout << "AstraSim: Received from Madrona: " << data[0] << std::endl;
+    // std::cout << "AstraSim: Received from Madrona: " << data[0] << std::endl;
     return data[0];
   }
 
@@ -271,7 +271,6 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     // AstraSim::timespec_t timeSpec;
     // timeSpec.time_val = 0;
     // return timeSpec;
-
     task1 t;
     t.type = 3;
     event_id++;
@@ -285,6 +284,7 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
       AstraSim::timespec_t delta,
       void (*fun_ptr)(void* fun_arg),
       void* fun_arg) {
+     
     task1 t;
     t.type = 2;
     t.fun_arg = fun_arg;
@@ -307,6 +307,7 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
       AstraSim::sim_request* request, // not yet used
       void (*msg_handler)(void* fun_arg),
       void* fun_arg) {
+    
     dst += npu_offset;
     // if(rank==0 && dst == 1 && cnt == 0){
     //	cout<<“rank 0 and destination 1 sim_send test\n”;
