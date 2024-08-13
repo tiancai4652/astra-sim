@@ -1398,8 +1398,9 @@ DataSet* Sys::generate_collective(
 }
 void Sys::call_events() {
   printf("call_events:call_events:%d\n",pending_events);
-  if(event_queue.find(Sys::boostedTick())==event_queue.end())
-    goto FINISH_CHECK;
+  // to do, remove for now, for debug, for madrona cannot auto increase time.
+  // if(event_queue.find(Sys::boostedTick())==event_queue.end())
+  //   goto FINISH_CHECK;
   for (auto& callable : event_queue[Sys::boostedTick()]) {
     try {
       pending_events--;
