@@ -206,6 +206,7 @@ unsigned long long cnt = 0;
     return data[0];
   }
 
+
   void comm_close() {
     munmap(data, sizeof(MadronaMsg) * numMessages);
     munmap(header, sizeof(int));
@@ -385,11 +386,20 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
   }
 };
 
+
 int main(int argc, char* argv[]) {
   numMessages = 1;
   printf("Start Comm....\n");
   comm_init();
   printf("End....\n");
+
+  // madrona set sim_schedule_count
+  int sim_schedule_count = 1;
+  for (const auto& inner_vec : physical_dims) {
+    sim_schedule_count *= inner_vec[0];
+  }
+  event_id++;
+  comm_send_wait_immediately(event_id, 0, 10,sim_schedule_count);
 
   printf("Start....\n");
   float comm_scale = 1;
