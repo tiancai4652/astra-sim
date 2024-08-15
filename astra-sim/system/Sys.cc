@@ -1397,13 +1397,17 @@ DataSet* Sys::generate_collective(
   return dataset;
 }
 void Sys::call_events() {
-  printf("call_events:call_events:%d\n",pending_events);
+  printf("node %d call_events:pending_events:%d\n",id, pending_events);
+  if (pending_events > 0) {
+    NI->set_signal(0, 20, pending_events);
+  }
   // to do, remove for now, for debug, for madrona cannot auto increase time.
   // if(event_queue.find(Sys::boostedTick())==event_queue.end())
   //   goto FINISH_CHECK;
   for (auto& callable : event_queue[Sys::boostedTick()]) {
     try {
       pending_events--;
+      printf("node %d pending_events--:pending_events:%d\n",id, pending_events);
       (std::get<0>(callable))
           ->call(std::get<1>(callable), std::get<2>(callable));
     } catch (...) {
@@ -1418,7 +1422,7 @@ void Sys::call_events() {
       initialized == false) {
     delete this;
   }
-}
+  }
 void Sys::exitSimLoop(std::string msg) {
   std::cout << msg << std::endl;
   NI->sim_finish();
@@ -1672,6 +1676,7 @@ void Sys::try_register_event(
   }
   cycles = 0;
   pending_events++;
+  printf("node %d pending_events++:pending_events:%d\n",id, pending_events);
   return;
 }
 void Sys::insert_into_ready_list(BaseStream* stream) {

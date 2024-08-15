@@ -58,6 +58,13 @@ class AstraNetworkAPI {
   virtual double sim_time_resolution() = 0;
   virtual int sim_init(AstraMemoryAPI* MEM) = 0;
   virtual timespec_t sim_get_time() = 0;
+  virtual void set_signal(
+      int time,
+      int type,
+      int src = 0,
+      int dst = 0,
+      int size = 0,
+      int port=0);
   virtual void sim_schedule(
       timespec_t delta,
       void (*fun_ptr)(void* fun_arg),

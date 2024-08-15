@@ -281,6 +281,17 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     timeSpec.time_val = msg.time;
     return timeSpec;
   }
+    virtual void set_signal(
+      int time,
+      int type,
+      int src = 0,
+      int dst = 0,
+      int size = 0,
+      int port=0){
+      event_id++;
+  comm_send_wait_immediately(event_id,time, type, src, dst, size, port);
+      
+    }
   virtual void sim_schedule(
       AstraSim::timespec_t delta,
       void (*fun_ptr)(void* fun_arg),
@@ -295,8 +306,8 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     // Simulator::Schedule(NanoSeconds(t.schTime), t.msg_handler, t.fun_arg);
     event_id++;
     commTaskHash[event_id] = t;
-    comm_send_wait_callback(event_id, 0, 2);
     printf("sim_schedule: %f\n", delta.time_val);
+    comm_send_wait_callback(event_id, t.schTime, 2);
     return;
   }
   virtual int sim_send(
@@ -332,9 +343,8 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     int pg = 3, dport = 100;
     flow_input.idx++;
 
-
-    comm_send_wait_callback(event_id, 0, 0, rank, dst, count,port);
     printf("sim_send: %f\n", 0.0);
+    comm_send_wait_callback(event_id, 0, 0, rank, dst, count,port);
     return 0;
   }
   virtual int sim_recv(
