@@ -1398,9 +1398,9 @@ DataSet* Sys::generate_collective(
 }
 void Sys::call_events() {
   printf("node %d call_events:pending_events:%d\n",id, pending_events);
-  if (pending_events > 0) {
-    NI->set_signal(0, 20, pending_events);
-  }
+  // if (pending_events > 0) {
+  //   NI->set_signal(0, 20, pending_events);
+  // }
   // to do, remove for now, for debug, for madrona cannot auto increase time.
   // if(event_queue.find(Sys::boostedTick())==event_queue.end())
   //   goto FINISH_CHECK;
