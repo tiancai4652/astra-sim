@@ -134,7 +134,7 @@ void notify_sender_sending_finished(int sender_node, int receiver_node,
 }
 
 // to do 
-void qp_finish(FILE *fout, Ptr<RdmaQueuePair> q) {
+void qp_finish(uint32_t sid,uint32_t did,uint32_t sport,uint32_t m_size) {
   printf("qp_finish\n");
   // uint32_t sid = ip_to_node_id(q->sip), did = ip_to_node_id(q->dip);
   // uint64_t base_rtt = pairRtt[sid][did], b = pairBw[sid][did];
@@ -164,12 +164,12 @@ void qp_finish(FILE *fout, Ptr<RdmaQueuePair> q) {
   //             << std::endl;
   //   exit(-1);
   // }
-  // int tag = sender_src_port_map[make_pair(q->sport, make_pair(sid, did))];
-  // sender_src_port_map.erase(make_pair(q->sport, make_pair(sid, did)));
-  // // let sender knows that the flow finishes;
-  // notify_sender_sending_finished(sid, did, q->m_size, tag);
-  // // let receiver knows that it receives packets;
-  // notify_receiver_receive_data(sid, did, q->m_size, tag);
+  int tag = sender_src_port_map[make_pair(sport, make_pair(sid, did))];
+  sender_src_port_map.erase(make_pair(sport, make_pair(sid, did)));
+  // let sender knows that the flow finishes;
+  notify_sender_sending_finished(sid, did, m_size, tag);
+  // let receiver knows that it receives packets;
+  notify_receiver_receive_data(sid, did, m_size, tag);
 }
 
 // int main1(int argc, char *argv[]) {

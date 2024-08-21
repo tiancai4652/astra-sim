@@ -176,6 +176,9 @@ unsigned long long cnt = 0;
       task1 t = commTaskHash[data[0].event_id];
       commTaskHash.erase(data[0].event_id);
       t.msg_handler(t.fun_arg);
+      if (t.type == 0) {
+          qp_finish(t.src,t.dest,data[0].port,data[0].size);
+      }
     }
   }
 
@@ -400,6 +403,8 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
 int main(int argc, char* argv[]) {
   numMessages = 1;
   printf("Start Comm....\n");
+  comm_init();
+  comm_close();
   comm_init();
   printf("End....\n");
 
