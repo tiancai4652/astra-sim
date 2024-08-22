@@ -175,9 +175,11 @@ unsigned long long cnt = 0;
     if (commTaskHash.find(data[0].event_id) != commTaskHash.end()) {
       task1 t = commTaskHash[data[0].event_id];
       commTaskHash.erase(data[0].event_id);
-      t.msg_handler(t.fun_arg);
       if (t.type == 0) {
-          qp_finish(t.src,t.dest,data[0].port,data[0].size);
+        // to do: is qp_finish contains t.msg_handler(t.fun_arg)?
+        qp_finish(t.src, t.dest, data[0].port, data[0].size);
+      } else {
+        t.msg_handler(t.fun_arg);
       }
     }
   }
