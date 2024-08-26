@@ -1404,10 +1404,12 @@ void Sys::call_events() {
   // to do, remove for now, for debug, for madrona cannot auto increase time.
   // if(event_queue.find(Sys::boostedTick())==event_queue.end())
   //   goto FINISH_CHECK;
-  for (auto& callable : event_queue[Sys::boostedTick()]) {
+
+  Tick time=Sys::boostedTick();
+
+  for (auto& callable : event_queue[time]) {
     try {
       pending_events--;
-      
       // printf("node %d pending_events--:pending_events:%d\n",id, pending_events);
       (std::get<0>(callable))
           ->call(std::get<1>(callable), std::get<2>(callable));
@@ -1415,11 +1417,11 @@ void Sys::call_events() {
       std::cerr << "warning! a callable is removed before call" << std::endl;
     }
   }
-  if (event_queue[Sys::boostedTick()].size() > 0) {
-    event_queue[Sys::boostedTick()].clear();
+  if (event_queue[time].size() > 0) {
+    event_queue[time].clear();
   }
-  event_queue.erase(Sys::boostedTick());
-  printf("event_queue remove %ld\n", Sys::boostedTick());
+  event_queue.erase(time);
+  printf("event_queue remove %ld\n", time);
   std::cout << "event_queue: ";
   for (auto it = event_queue.begin(); it != event_queue.end(); ++it) {
     std::cout << it->first;
