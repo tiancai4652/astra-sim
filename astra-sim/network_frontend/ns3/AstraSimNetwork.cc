@@ -284,7 +284,7 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     MadronaMsg msg = comm_send_wait_immediately(event_id, 0, 3);
     AstraSim::timespec_t timeSpec;
     timeSpec.time_val = msg.time;
-    printf("---sim_get_time:%f---\n",timeSpec.time_val);
+    // printf("---sim_get_time:%f---\n",timeSpec.time_val);
     return timeSpec;
   }
     virtual void set_signal(

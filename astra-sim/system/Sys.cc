@@ -1397,7 +1397,7 @@ DataSet* Sys::generate_collective(
   return dataset;
 }
 void Sys::call_events() {
-  printf("node %d call_events:pending_events:%d\n",id, pending_events);
+  // printf("node %d call_events:pending_events:%d\n",id, pending_events);
   // if (pending_events > 0) {
   //   NI->set_signal(0, 20, pending_events);
   // }
@@ -1407,7 +1407,8 @@ void Sys::call_events() {
   for (auto& callable : event_queue[Sys::boostedTick()]) {
     try {
       pending_events--;
-      printf("node %d pending_events--:pending_events:%d\n",id, pending_events);
+      
+      // printf("node %d pending_events--:pending_events:%d\n",id, pending_events);
       (std::get<0>(callable))
           ->call(std::get<1>(callable), std::get<2>(callable));
     } catch (...) {
@@ -1418,8 +1419,19 @@ void Sys::call_events() {
     event_queue[Sys::boostedTick()].clear();
   }
   event_queue.erase(Sys::boostedTick());
-  FINISH_CHECK: if ((finished_workloads == 1 && event_queue.size() == 0) ||
+  printf("event_queue remove %ld\n", Sys::boostedTick());
+  std::cout << "event_queue: ";
+  for (auto it = event_queue.begin(); it != event_queue.end(); ++it) {
+    std::cout << it->first;
+    if (std::next(it) != event_queue.end()) {
+      std::cout << ", ";
+    }
+  }
+  std::cout << std::endl;
+FINISH_CHECK:
+  if ((finished_workloads == 1 && event_queue.size() == 0) ||
       initialized == false) {
+    printf("delete this;\n");    
     delete this;
   }
   }
@@ -1668,6 +1680,16 @@ void Sys::try_register_event(
   }
   event_queue[Sys::boostedTick() + cycles].push_back(
       std::make_tuple(callable, event, callData));
+
+  printf("event_queue.add %ld\n", Sys::boostedTick() + cycles);
+  std::cout << "event_queue: ";
+  for (auto it = event_queue.begin(); it != event_queue.end(); ++it) {
+    std::cout << it->first;
+    if (std::next(it) != event_queue.end()) {
+      std::cout << ", ";
+    }
+  }
+  std::cout << std::endl;
   if (should_schedule) {
     timespec_t tmp = generate_time(cycles);
     BasicEventHandlerData* data =
@@ -1676,7 +1698,7 @@ void Sys::try_register_event(
   }
   cycles = 0;
   pending_events++;
-  printf("node %d pending_events++:pending_events:%d\n",id, pending_events);
+  // printf("node %d pending_events++:pending_events:%d\n",id, pending_events);
   return;
 }
 void Sys::insert_into_ready_list(BaseStream* stream) {
