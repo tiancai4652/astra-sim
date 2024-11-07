@@ -1421,8 +1421,8 @@ void Sys::call_events() {
     event_queue[time].clear();
   }
   event_queue.erase(time);
-  printf("event_queue remove %ld\n", time);
-  std::cout << "event_queue: ";
+  // printf("event_queue remove %ld\n", time);
+  // std::cout << "event_queue: ";
   for (auto it = event_queue.begin(); it != event_queue.end(); ++it) {
     std::cout << it->first;
     if (std::next(it) != event_queue.end()) {
@@ -1683,8 +1683,8 @@ void Sys::try_register_event(
   event_queue[Sys::boostedTick() + cycles].push_back(
       std::make_tuple(callable, event, callData));
 
-  printf("event_queue.add %ld\n", Sys::boostedTick() + cycles);
-  std::cout << "event_queue: ";
+  // printf("event_queue.add %ld\n", Sys::boostedTick() + cycles);
+  // std::cout << "event_queue: ";
   for (auto it = event_queue.begin(); it != event_queue.end(); ++it) {
     std::cout << it->first;
     if (std::next(it) != event_queue.end()) {

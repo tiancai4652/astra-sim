@@ -1,10 +1,10 @@
 #include "astra-sim/system/AstraNetworkAPI.hh"
 #include "astra-sim/system/Sys.hh"
-// #include "ns3/applications-module.h"
-// #include "ns3/core-module.h"
-// #include "ns3/csma-module.h"
-// #include "ns3/internet-module.h"
-// #include "ns3/network-module.h"
+#include "ns3/applications-module.h"
+#include "ns3/core-module.h"
+#include "ns3/csma-module.h"
+#include "ns3/internet-module.h"
+#include "ns3/network-module.h"
 #include <execinfo.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -22,7 +22,7 @@
 #include <iostream>
 
 using namespace std;
-// using namespace ns3;
+using namespace ns3;
 
 // std::vector<string> workloads{"microAllReduce.txt", "microAllToAll.txt"};
 // std::vector<std::vector<int>> physical_dims{{8, 4}, {8, 4}};
@@ -34,7 +34,7 @@ std::vector<std::vector<int>> physical_dims{{2, 1}};
 map<int, struct task1> commTaskHash;
 int event_id = 0;
 // set shared memory size,less than 100 default.
-int numMessages = 1;
+int numMessages = 100;
 
 queue<struct task1> workerQueue;
 unsigned long long tempcnt = 999;
@@ -60,67 +60,13 @@ unsigned long long cnt = 0;
     }
   };
 
-  // void comm() {
-  //   int size = sizeof(MadronaMsg) * numMessages + sizeof(int);
-  //   printf("size:%hd\n", size);
-  //   int shm_fd = shm_open("myshm", O_CREAT | O_RDWR, 0666);
-  //   if (shm_fd == -1) {
-  //     perror("shm_open");
-  //     return;
-  //   }
-
-  //   if (ftruncate(shm_fd, size) == -1) {
-  //     perror("ftruncate");
-  //     close(shm_fd);
-  //     return;
-  //   }
-
-  //   void* addr = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-  //   if (addr == MAP_FAILED) {
-  //     perror("mmap");
-  //     close(shm_fd);
-  //     return;
-  //   }
-
-  //   // msg count
-  //   int* header = (int*)addr;
-  //   *header = numMessages;
-
-  //   MadronaMsg* data = (MadronaMsg*)(header + 1); // jump count location.
-  //   for (int i = 0; i < numMessages; i++) {
-  //     data[i].type = i;
-  //     data[i].event_id = i + 100;
-  //     data[i].time = i * 1000;
-  //     data[i].src = i * 10;
-  //     data[i].dst = i * 20;
-  //     data[i].size = i * 30;
-  //   }
-
-  //   std::cout << "size: " << size << std::endl;
-  //   std::cout << "C++: Data written to shared memory: " << data[0] << std::endl;
-
-  //   sem_t* semaphore_a = sem_open("semA", O_CREAT, 0666, 0);
-  //   sem_t* semaphore_b = sem_open("semB", O_CREAT, 0666, 0);
-  //   sem_post(semaphore_a);
-  //   sem_wait(semaphore_b);
-  //   std::cout << "C++: Received from Python: " << data[0] << std::endl;
-
-  //   munmap(data, sizeof(MadronaMsg) * numMessages);
-  //   munmap(header, sizeof(int));
-  //   shm_unlink("myshm");
-  //   sem_close(semaphore_a);
-  //   sem_close(semaphore_b);
-  //   sem_unlink("semA");
-  //   sem_unlink("semB");
-  //   close(shm_fd);
-  // }
-
   int shm_fd;
   void* addr;
   int* header;
   sem_t* semaphore_a;
   sem_t* semaphore_b;
   MadronaMsg* data;
+
   bool comm_init() {
     int size = sizeof(MadronaMsg) * numMessages + sizeof(int);
     printf("size:%hd\n", size);
@@ -156,7 +102,7 @@ unsigned long long cnt = 0;
       int dst = 0,
       int size = 0,
       int port = 0) {
-    *header = numMessages;
+    *header = 1;
     data = (MadronaMsg*)(header + 1); // jump count location.
     data[0].type = type;
     data[0].event_id = event_id;
@@ -165,18 +111,15 @@ unsigned long long cnt = 0;
     data[0].dst = dst;
     data[0].size = size;
     data[0].port = port;
-    // std::cout << "size: " << size << std::endl;
-    // std::cout << "AstraSim: Data written to Madrona: " << data[0] << std::endl;
 
     sem_post(semaphore_a);
     sem_wait(semaphore_b);
-    // std::cout << "AstraSim: Received from Madrona: " << data[0] << std::endl;
 
+    // only hanle one element event.
     if (commTaskHash.find(data[0].event_id) != commTaskHash.end()) {
       task1 t = commTaskHash[data[0].event_id];
       commTaskHash.erase(data[0].event_id);
       if (t.type == 0) {
-        // to do: is qp_finish contains t.msg_handler(t.fun_arg)?
         qp_finish(t.src, t.dest, data[0].port, data[0].size);
       } else {
         t.msg_handler(t.fun_arg);
@@ -269,23 +212,23 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     return 0;
   }
   AstraSim::timespec_t sim_get_time() {
-    // AstraSim::timespec_t timeSpec;
-    // timeSpec.time_val = Simulator::Now().GetNanoSeconds();
-    // return timeSpec;
+    AstraSim::timespec_t timeSpec;
+    timeSpec.time_val = Simulator::Now().GetNanoSeconds();
+    return timeSpec;
     // to do
 
     // AstraSim::timespec_t timeSpec;
     // timeSpec.time_val = 0;
     // return timeSpec;
-    task1 t;
-    t.type = 3;
-    event_id++;
-    commTaskHash[event_id] = t;
-    MadronaMsg msg = comm_send_wait_immediately(event_id, 0, 3);
-    AstraSim::timespec_t timeSpec;
-    timeSpec.time_val = msg.time;
-    // printf("---sim_get_time:%f---\n",timeSpec.time_val);
-    return timeSpec;
+    // task1 t;
+    // t.type = 3;
+    // event_id++;
+    // commTaskHash[event_id] = t;
+    // MadronaMsg msg = comm_send_wait_immediately(event_id, 0, 3);
+    // AstraSim::timespec_t timeSpec;
+    // timeSpec.time_val = msg.time;
+    // // printf("---sim_get_time:%f---\n",timeSpec.time_val);
+    // return timeSpec;
   }
     virtual void set_signal(
       int time,
@@ -309,11 +252,11 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     t.msg_handler = fun_ptr;
     t.schTime = delta.time_val;
     // to do
-    // Simulator::Schedule(NanoSeconds(t.schTime), t.msg_handler, t.fun_arg);
-    event_id++;
-    commTaskHash[event_id] = t;
+    Simulator::Schedule(NanoSeconds(t.schTime), t.msg_handler, t.fun_arg);
+    // event_id++;
+    // commTaskHash[event_id] = t;
     printf("sim_schedule: %f\n", delta.time_val);
-    comm_send_wait_callback(event_id, t.schTime, 2);
+    // comm_send_wait_callback(event_id, t.schTime, 2);
     return;
   }
   virtual int sim_send(
@@ -411,15 +354,7 @@ int main(int argc, char* argv[]) {
   comm_init();
   printf("End....\n");
 
-  // madrona set sim_schedule_count
-  int sim_schedule_count = 1;
-  for (const auto& inner_vec : physical_dims) {
-    sim_schedule_count *= inner_vec[0];
-  }
-  event_id++;
-  comm_send_wait_immediately(event_id, 0, 10,sim_schedule_count);
 
-  printf("Start....\n");
   float comm_scale = 1;
 
   CommandLine cmd;
@@ -506,12 +441,17 @@ int main(int argc, char* argv[]) {
   //to do
   //push madrona run next frame
   //event type == -100
-  while(true)
-  {
-    event_id++;
-    int type=-100;
-    comm_send_wait_callback(event_id, 0, type, 0, 0, 0);
-  }
+  // while(true)
+  // {
+  //   event_id++;
+  //   int type=-100;
+  //   comm_send_wait_callback(event_id, 0, type, 0, 0, 0);
+  // }
+
+  Simulator::Run();
+  // Simulator::Stop(TimeStep (0x7fffffffffffffffLL));
+  Simulator::Stop(Seconds(2000000000));
+  Simulator::Destroy();
 
 
   return 0;
