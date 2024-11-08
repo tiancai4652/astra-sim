@@ -4,7 +4,7 @@
 #undef PGO_TRAINING
 #define PATH_TO_PGO_CONFIG "path_to_pgo_config"
 
-#include "common.h"
+// #include "common.h"
 // #include "ns3/applications-module.h"
 // #include "ns3/core-module.h"
 // #include "ns3/error-model.h"
@@ -28,7 +28,18 @@
 // using namespace ns3;
 using namespace std;
 
+struct FlowInput {
+  uint32_t src, dst, pg, maxPacketCount, port, dport;
+  double start_time;
+  uint32_t idx;
+};
+
 std::map<std::pair<int, std::pair<int, int>>, int> sender_src_port_map;
+FlowInput flow_input = {0};
+
+// maintain port number for each host pair
+std::unordered_map<uint32_t, unordered_map<uint32_t, uint16_t>> portNumber;
+
 
 struct task1 {
   int src;

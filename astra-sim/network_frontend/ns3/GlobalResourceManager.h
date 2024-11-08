@@ -12,7 +12,8 @@
 #include <iostream>
 #include "entry.h"
 
-
+// struct task1;
+// void qp_finish(uint32_t sid, uint32_t did, uint32_t sport, uint32_t m_size);
 
 // 假设MadronaMsg和task1已经在其他地方定义
   class MadronaMsg {
