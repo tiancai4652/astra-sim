@@ -20,6 +20,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <iostream>
+#include "GlobalResourceManager.h"
+
 
 using namespace std;
 using namespace ns3;
@@ -29,143 +31,16 @@ using namespace ns3;
 std::vector<string> workloads{"microAllReduce.txt"};
 std::vector<std::vector<int>> physical_dims{{2, 1}};
 
-// add for madrona
-// enent_id - task
-map<int, struct task1> commTaskHash;
-int event_id = 0;
-// set shared memory size,less than 100 default.
-int numMessages = 100;
+// // add for madrona
+// // enent_id - task
+// map<int, struct task1> commTaskHash;
+// int event_id = 0;
+// // set shared memory size,less than 100 default.
+// int numMessages = 100;
 
 queue<struct task1> workerQueue;
 unsigned long long tempcnt = 999;
 unsigned long long cnt = 0;
-
-
-
-  class MadronaMsg {
-   public:
-    int type;
-    int event_id;
-    int time;
-    int src;
-    int dst;
-    int size;
-    int port;
-    // 为 std::cout 添加输出流重载
-    friend std::ostream& operator<<(std::ostream& os, const MadronaMsg& msg) {
-      return os << "MadronaMsg{type: " << msg.type
-                << ", event_id: " << msg.event_id << ", time: " << msg.time
-                << ", src: " << msg.src << ", dst: " << msg.dst
-                << ", port: " << msg.port << ", size: " << msg.size << "}";
-    }
-  };
-
-  int shm_fd;
-  void* addr;
-  int* header;
-  sem_t* semaphore_a;
-  sem_t* semaphore_b;
-  MadronaMsg* data;
-
-  bool comm_init() {
-    int size = sizeof(MadronaMsg) * numMessages + sizeof(int);
-    printf("size:%hd\n", size);
-    shm_fd = shm_open("myshm", O_CREAT | O_RDWR, 0666);
-    if (shm_fd == -1) {
-      perror("shm_open");
-      return false;
-    }
-
-    if (ftruncate(shm_fd, size) == -1) {
-      perror("ftruncate");
-      close(shm_fd);
-      return false;
-    }
-
-    addr = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-    if (addr == MAP_FAILED) {
-      perror("mmap");
-      close(shm_fd);
-      return false;
-    }
-    header = (int*)addr;
-    semaphore_a = sem_open("semA", O_CREAT, 0666, 0);
-    semaphore_b = sem_open("semB", O_CREAT, 0666, 0);
-    return true;
-  }
-
-  void comm_send_wait_callback(
-      int event_id,
-      int time,
-      int type,
-      int src = 0,
-      int dst = 0,
-      int size = 0,
-      int port = 0) {
-    *header = 1;
-    data = (MadronaMsg*)(header + 1); // jump count location.
-    data[0].type = type;
-    data[0].event_id = event_id;
-    data[0].time = time;
-    data[0].src = src;
-    data[0].dst = dst;
-    data[0].size = size;
-    data[0].port = port;
-
-    sem_post(semaphore_a);
-    sem_wait(semaphore_b);
-
-    // only hanle one element event.
-    if (commTaskHash.find(data[0].event_id) != commTaskHash.end()) {
-      task1 t = commTaskHash[data[0].event_id];
-      commTaskHash.erase(data[0].event_id);
-      if (t.type == 0) {
-        qp_finish(t.src, t.dest, data[0].port, data[0].size);
-      } else {
-        t.msg_handler(t.fun_arg);
-      }
-    }
-  }
-
-  MadronaMsg comm_send_wait_immediately(
-      int event_id,
-      int time,
-      int type,
-      int src = 0,
-      int dst = 0,
-      int size = 0,
-      int port=0) {
-    *header = numMessages;
-    data = (MadronaMsg*)(header + 1); // jump count location.
-    data[0].type = type;
-    data[0].event_id = event_id;
-    data[0].time = time;
-    data[0].src = src;
-    data[0].dst = dst;
-    data[0].size = size;
-    data[0].port = port;
-
-    // std::cout << "size: " << size << std::endl;
-    // std::cout << "AstraSim: Data written to Madrona: " << data[0] << std::endl;
-
-    sem_post(semaphore_a);
-    sem_wait(semaphore_b);
-    // std::cout << "AstraSim: Received from Madrona: " << data[0] << std::endl;
-    return data[0];
-  }
-
-
-  void comm_close() {
-    munmap(data, sizeof(MadronaMsg) * numMessages);
-    munmap(header, sizeof(int));
-    shm_unlink("myshm");
-    sem_close(semaphore_a);
-    sem_close(semaphore_b);
-    sem_unlink("semA");
-    sem_unlink("semB");
-    close(shm_fd);
-  }
-
 
 struct sim_event {
   void* buffer;
@@ -201,7 +76,7 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
       }
     }
     // todo
-    comm_close();
+    GlobalResourceManager::comm_close();
     exit(0);
     return 0;
   }
@@ -237,8 +112,8 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
       int dst = 0,
       int size = 0,
       int port=0){
-      event_id++;
-  comm_send_wait_immediately(event_id,time, type, src, dst, size, port);
+      GlobalResourceManager::event_id++;
+  GlobalResourceManager::comm_send_wait_immediately(GlobalResourceManager::event_id,time, type, src, dst, size, port);
       
     }
   virtual void sim_schedule(
@@ -283,8 +158,8 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     sentHash[make_pair(tag, make_pair(t.src, t.dest))] = t;
     // to do
     // SendFlow(rank, dst, count, msg_handler, fun_arg, tag);
-    event_id++;
-    commTaskHash[event_id] = t;
+    GlobalResourceManager::event_id++;
+    GlobalResourceManager::commTaskHash[GlobalResourceManager::event_id] = t;
 
     // entry.cc
     uint32_t port = portNumber[rank][dst]++; // get a new port number
@@ -293,7 +168,7 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     flow_input.idx++;
 
     printf("sim_send: %f\n", 0.0);
-    comm_send_wait_callback(event_id, 0, 0, rank, dst, count,port);
+    GlobalResourceManager::comm_send_wait_callback(GlobalResourceManager::event_id, 0, 0, rank, dst, count,port);
     return 0;
   }
   virtual int sim_recv(
@@ -347,11 +222,11 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
 
 
 int main(int argc, char* argv[]) {
-  numMessages = 1;
+  GlobalResourceManager::numMessages = 1;
   printf("Start Comm....\n");
-  comm_init();
-  comm_close();
-  comm_init();
+  GlobalResourceManager::comm_init();
+  GlobalResourceManager::comm_close();
+  GlobalResourceManager::comm_init();
   printf("End....\n");
 
 

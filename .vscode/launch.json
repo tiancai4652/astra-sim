@@ -34,7 +34,7 @@
                 // "/home/xx/work/astra-sim/extern/network_backend/ns3/simulation/scratch": "${workspaceFolder}/extern/network_backend/ns3/simulation/scratch"
                 "/home/zhangran/work/astra-sim/extern/network_backend/analytical/src/api": "${workspaceFolder}/extern/network_backend/analytical/src/api"
             },
-             "preLaunchTask": "build"
+            // "preLaunchTask": "build"
         }
     ]
 }

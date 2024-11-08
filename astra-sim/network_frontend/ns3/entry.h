@@ -1,3 +1,6 @@
+#ifndef ENTRY_H
+#define ENTRY_H
+
 #undef PGO_TRAINING
 #define PATH_TO_PGO_CONFIG "path_to_pgo_config"
 
@@ -198,3 +201,4 @@ void qp_finish(uint32_t sid,uint32_t did,uint32_t sport,uint32_t m_size) {
 //   endt = clock();
 //   // std:://cout << (double)(endt - begint) / CLOCKS_PER_SEC << "\n";
 // }
+#endif // ENTRY_H

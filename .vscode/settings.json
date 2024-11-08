@@ -61,6 +61,7 @@
         "valarray": "cpp",
         "algorithm": "cpp",
         "any": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "string": "cpp"
     }
 }
