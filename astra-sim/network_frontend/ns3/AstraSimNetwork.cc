@@ -168,7 +168,7 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     flow_input.idx++;
 
     printf("sim_send: %f\n", 0.0);
-    GlobalResourceManager::comm_send_wait_callback(GlobalResourceManager::event_id, 0, 0, rank, dst, count,port);
+    GlobalResourceManager::comm_send_wait_callback(GlobalResourceManager::event_id, Simulator::Now().GetNanoSeconds(), 0, rank, dst, count,port);
     return 0;
   }
   virtual int sim_recv(
