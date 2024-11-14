@@ -110,6 +110,40 @@ inline static void comm_send_wait_callback(
         t.msg_handler(t.fun_arg);
       }
     }
+
+  }
+
+
+  inline static void comm_send_wait_callback_multi() {
+    MadronaMsg rst = comm_send_wait_immediately(0, 0, 11, 0, 0, 0, 0);
+    int type = rst.type;
+    std::vector<MadronaMsg> mv;
+    // type 12 means return over.
+    while (type != 12) {
+      MadronaMsg msg = MadronaMsg();
+      msg.type = rst.type;
+      msg.event_id = rst.event_id;
+      msg.time = rst.time;
+      msg.src = rst.src;
+      msg.dst = rst.dst;
+      msg.size = rst.size;
+      msg.port = rst.port;
+      mv.push_back(msg);
+      MadronaMsg rst = comm_send_wait_immediately(0, 0, 13, 0, 0, 0, 0);
+      type = rst.type;
+    }
+    for (MadronaMsg val : mv) {
+      // only hanle one element event.
+      if (commTaskHash.find(val.event_id) != commTaskHash.end()) {
+        task1 t = commTaskHash[val.event_id];
+        commTaskHash.erase(val.event_id);
+        if (t.type == 0) {
+          qp_finish(t.src, t.dest, val.port, val.size);
+        } else {
+          t.msg_handler(t.fun_arg);
+        }
+      }
+    }
   }
 
 inline static MadronaMsg comm_send_wait_immediately(
