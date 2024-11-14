@@ -120,7 +120,7 @@ inline static void comm_send_wait_callback(
     std::vector<MadronaMsg> mv;
     // type 12 means return over.
     while (type != 12) {
-      MadronaMsg msg = MadronaMsg();
+      MadronaMsg msg ;
       msg.type = rst.type;
       msg.event_id = rst.event_id;
       msg.time = rst.time;
@@ -129,7 +129,7 @@ inline static void comm_send_wait_callback(
       msg.size = rst.size;
       msg.port = rst.port;
       mv.push_back(msg);
-      MadronaMsg rst = comm_send_wait_immediately(0, 0, 13, 0, 0, 0, 0);
+      rst = comm_send_wait_immediately(0, 0, 13, 0, 0, 0, 0);
       type = rst.type;
     }
     for (MadronaMsg val : mv) {
