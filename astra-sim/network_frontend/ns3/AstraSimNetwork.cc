@@ -28,8 +28,10 @@ using namespace ns3;
 
 // std::vector<string> workloads{"microAllReduce.txt", "microAllToAll.txt"};
 // std::vector<std::vector<int>> physical_dims{{8, 4}, {8, 4}};
+// std::vector<string> workloads{"microAllReduce.txt"};
+// std::vector<std::vector<int>> physical_dims{{8, 4}};
 std::vector<string> workloads{"microAllReduce.txt"};
-std::vector<std::vector<int>> physical_dims{{2, 1}};
+std::vector<std::vector<int>> physical_dims{{8, 1}};
 
 // // add for madrona
 // // enent_id - task
@@ -268,6 +270,7 @@ int main(int argc, char* argv[]) {
     for (auto dim : physical_dims[i]) {
       job_npus *= dim;
     }
+    printf("job_npus:%d\n",job_npus);
     for (int j = 0; j < job_npus; j++) {
       networks[j + npu_offset] =
           new ASTRASimNetwork(j + npu_offset, npu_offset);
@@ -303,6 +306,8 @@ int main(int argc, char* argv[]) {
   for (int i = 0; i < num_gpus; i++) {
     systems[i]->workload->fire();
   }
+
+  
 
   // to do
   // Simulator::Run();
