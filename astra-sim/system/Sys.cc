@@ -1685,13 +1685,13 @@ void Sys::try_register_event(
 
   // printf("event_queue.add %ld\n", Sys::boostedTick() + cycles);
   // std::cout << "event_queue: ";
-  for (auto it = event_queue.begin(); it != event_queue.end(); ++it) {
-    std::cout << it->first;
-    if (std::next(it) != event_queue.end()) {
-      std::cout << ", ";
-    }
-  }
-  std::cout << std::endl;
+  // for (auto it = event_queue.begin(); it != event_queue.end(); ++it) {
+  //   std::cout << it->first;
+  //   if (std::next(it) != event_queue.end()) {
+  //     std::cout << ", ";
+  //   }
+  // }
+  // std::cout << std::endl;
   if (should_schedule) {
     timespec_t tmp = generate_time(cycles);
     BasicEventHandlerData* data =
