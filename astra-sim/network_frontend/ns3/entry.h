@@ -149,7 +149,7 @@ void notify_sender_sending_finished(int sender_node, int receiver_node,
 
 // to do 
 void qp_finish(uint32_t sid,uint32_t did,uint32_t sport,uint32_t m_size) {
-  printf("qp_finish\n");
+  // printf("qp_finish\n");
   // uint32_t sid = ip_to_node_id(q->sip), did = ip_to_node_id(q->dip);
   // uint64_t base_rtt = pairRtt[sid][did], b = pairBw[sid][did];
   // uint32_t total_bytes =

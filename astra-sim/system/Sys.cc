@@ -1402,10 +1402,11 @@ void Sys::call_events() {
   //   NI->set_signal(0, 20, pending_events);
   // }
   // to do, remove for now, for debug, for madrona cannot auto increase time.
-  // if(event_queue.find(Sys::boostedTick())==event_queue.end())
-  //   goto FINISH_CHECK;
-
   Tick time=Sys::boostedTick();
+  if(event_queue.find(Sys::boostedTick())==event_queue.end())
+    goto FINISH_CHECK;
+
+  
 
   for (auto& callable : event_queue[time]) {
     try {
@@ -1423,13 +1424,13 @@ void Sys::call_events() {
   event_queue.erase(time);
   // printf("event_queue remove %ld\n", time);
   // std::cout << "event_queue: ";
-  for (auto it = event_queue.begin(); it != event_queue.end(); ++it) {
-    std::cout << it->first;
-    if (std::next(it) != event_queue.end()) {
-      std::cout << ", ";
-    }
-  }
-  std::cout << std::endl;
+  // for (auto it = event_queue.begin(); it != event_queue.end(); ++it) {
+  //   std::cout << it->first;
+  //   if (std::next(it) != event_queue.end()) {
+  //     std::cout << ", ";
+  //   }
+  // }
+  // std::cout << std::endl;
 FINISH_CHECK:
   if ((finished_workloads == 1 && event_queue.size() == 0) ||
       initialized == false) {

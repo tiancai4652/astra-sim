@@ -31,7 +31,7 @@ using namespace ns3;
 // std::vector<string> workloads{"microAllReduce.txt"};
 // std::vector<std::vector<int>> physical_dims{{8, 4}};
 std::vector<string> workloads{"microAllReduce.txt"};
-std::vector<std::vector<int>> physical_dims{{8, 1}};
+std::vector<std::vector<int>> physical_dims{{4, 1}};
 
 // // add for madrona
 // // enent_id - task
@@ -77,8 +77,13 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
              << "\n";
       }
     }
+
+    // MAKE MADRONA EXIT
+    GlobalResourceManager::comm_send_wait_immediately(0,0,14,0,0,0,0);
+
     // todo
     GlobalResourceManager::comm_close();
+
     exit(0);
     return 0;
   }
@@ -169,7 +174,7 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     int pg = 3, dport = 100;
     flow_input.idx++;
 
-    printf("sim_send: %f\n", 0.0);
+    printf("sim_send: %f %d-%d\n", 0.0,rank,dst);
     GlobalResourceManager::comm_send_wait_callback(GlobalResourceManager::event_id, Simulator::Now().GetNanoSeconds(), 0, rank, dst, count,port);
     return 0;
   }
