@@ -11,7 +11,13 @@
 #include <unistd.h>
 #include <iostream>
 #include "entry.h"
+#include "ns3/applications-module.h"
+#include "ns3/core-module.h"
+#include "ns3/csma-module.h"
+#include "ns3/internet-module.h"
+#include "ns3/network-module.h"
 
+using namespace ns3;
 // struct task1;
 // void qp_finish(uint32_t sid, uint32_t did, uint32_t sport, uint32_t m_size);
 
@@ -105,7 +111,10 @@ inline static void comm_send_wait_callback(
       task1 t = commTaskHash[data[0].event_id];
       commTaskHash.erase(data[0].event_id);
       if (t.type == 0) {
-        qp_finish(t.src, t.dest, data[0].port, data[0].size);
+        // qp_finish(t.src, t.dest, data[0].port, data[0].size);
+        double t_relative=data[0].time-Simulator::Now().GetNanoSeconds();
+        printf("t_relative:%f\n",t_relative);
+        Simulator::Schedule(NanoSeconds(t_relative), &qp_finish, t.src, t.dest, data[0].port, data[0].size);
       } else {
         t.msg_handler(t.fun_arg);
       }
@@ -138,7 +147,10 @@ inline static void comm_send_wait_callback(
         task1 t = commTaskHash[val.event_id];
         commTaskHash.erase(val.event_id);
         if (t.type == 0) {
-          qp_finish(t.src, t.dest, val.port, val.size);
+          // qp_finish(t.src, t.dest, val.port, val.size);
+          double t_relative=val.time-Simulator::Now().GetNanoSeconds();
+          printf("t_relative:%f\n",t_relative);
+          Simulator::Schedule(NanoSeconds(t_relative), &qp_finish, t.src, t.dest, val.port, val.size);
         } else {
           t.msg_handler(t.fun_arg);
         }

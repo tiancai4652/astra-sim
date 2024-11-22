@@ -30,8 +30,9 @@ using namespace ns3;
 // std::vector<std::vector<int>> physical_dims{{8, 4}, {8, 4}};
 // std::vector<string> workloads{"microAllReduce.txt"};
 // std::vector<std::vector<int>> physical_dims{{8, 4}};
+// std::vector<string> workloads{"MLP_HybridParallel_Data_Model.txt"};
 std::vector<string> workloads{"microAllReduce.txt"};
-std::vector<std::vector<int>> physical_dims{{4, 1}};
+std::vector<std::vector<int>> physical_dims{{8, 1}};
 
 // // add for madrona
 // // enent_id - task
@@ -174,8 +175,8 @@ class ASTRASimNetwork : public AstraSim::AstraNetworkAPI {
     int pg = 3, dport = 100;
     flow_input.idx++;
 
-    printf("sim_send: %f %d-%d\n", 0.0,rank,dst);
-    GlobalResourceManager::comm_send_wait_callback(GlobalResourceManager::event_id, Simulator::Now().GetNanoSeconds(), 0, rank, dst, count,port);
+    printf("sim_send: %f %d-%d id:%d\n", 0.0,rank,dst,GlobalResourceManager::event_id);
+    GlobalResourceManager::comm_send_wait_immediately(GlobalResourceManager::event_id, Simulator::Now().GetNanoSeconds(), 0, rank, dst, count,port);
     return 0;
   }
   virtual int sim_recv(
