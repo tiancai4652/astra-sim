@@ -145,6 +145,10 @@ void notify_sender_sending_finished(int sender_node, int receiver_node,
       t2.msg_handler(t2.fun_arg);
     }
   }
+  else
+  {
+    printf("not find in sentHash!");
+  }
 }
 
 // to do 
@@ -178,12 +182,21 @@ void qp_finish(uint32_t sid,uint32_t did,uint32_t sport,uint32_t m_size) {
   //             << std::endl;
   //   exit(-1);
   // }
-  int tag = sender_src_port_map[make_pair(sport, make_pair(sid, did))];
-  sender_src_port_map.erase(make_pair(sport, make_pair(sid, did)));
-  // let sender knows that the flow finishes;
-  notify_sender_sending_finished(sid, did, m_size, tag);
-  // let receiver knows that it receives packets;
-  notify_receiver_receive_data(sid, did, m_size, tag);
+
+  auto it = sender_src_port_map.find(std::make_pair(sport, std::make_pair(sid, did)));
+  if (it != sender_src_port_map.end()) {
+      int tag = it->second;  // 键存在，获取值
+      // int tag = sender_src_port_map[make_pair(sport, make_pair(sid, did))];
+      sender_src_port_map.erase(make_pair(sport, make_pair(sid, did)));
+      // let sender knows that the flow finishes;
+      notify_sender_sending_finished(sid, did, m_size, tag);
+      // let receiver knows that it receives packets;
+      notify_receiver_receive_data(sid, did, m_size, tag);
+  } else {
+      std::cout << "Key not found!" << std::endl;
+  }
+
+ 
 }
 
 // int main1(int argc, char *argv[]) {

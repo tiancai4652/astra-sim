@@ -2,14 +2,13 @@
 #ifndef GLOBAL_RESOURCE_MANAGER_H
 #define GLOBAL_RESOURCE_MANAGER_H
 
-#include <semaphore.h>
-#include <map>
-#include <vector>
-#include <iostream>
-#include <sys/mman.h>
 #include <fcntl.h>
+#include <semaphore.h>
+#include <sys/mman.h>
 #include <unistd.h>
 #include <iostream>
+#include <map>
+#include <vector>
 #include "entry.h"
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
@@ -22,43 +21,40 @@ using namespace ns3;
 // void qp_finish(uint32_t sid, uint32_t did, uint32_t sport, uint32_t m_size);
 
 // 假设MadronaMsg和task1已经在其他地方定义
-  class MadronaMsg {
-   public:
-    int type;
-    int event_id;
-    int time;
-    int src;
-    int dst;
-    int size;
-    int port;
-    // 为 std::cout 添加输出流重载
-    friend std::ostream& operator<<(std::ostream& os, const MadronaMsg& msg) {
-      return os << "MadronaMsg{type: " << msg.type
-                << ", event_id: " << msg.event_id << ", time: " << msg.time
-                << ", src: " << msg.src << ", dst: " << msg.dst
-                << ", port: " << msg.port << ", size: " << msg.size << "}";
-    }
-  };
-
-
+class MadronaMsg {
+ public:
+  int type;
+  int event_id;
+  int time;
+  int src;
+  int dst;
+  int size;
+  int port;
+  // 为 std::cout 添加输出流重载
+  friend std::ostream& operator<<(std::ostream& os, const MadronaMsg& msg) {
+    return os << "MadronaMsg{type: " << msg.type
+              << ", event_id: " << msg.event_id << ", time: " << msg.time
+              << ", src: " << msg.src << ", dst: " << msg.dst
+              << ", port: " << msg.port << ", size: " << msg.size << "}";
+  }
+};
 
 class GlobalResourceManager {
-public:
-    static int shm_fd;
-    static void* addr;
-    static int* header;
-    static sem_t* semaphore_a;
-    static sem_t* semaphore_b;
-    static MadronaMsg* data;
+ public:
+  static int shm_fd;
+  static void* addr;
+  static int* header;
+  static sem_t* semaphore_a;
+  static sem_t* semaphore_b;
+  static MadronaMsg* data;
 
-    // enent_id - task
-    static std::map<int, struct task1> commTaskHash;
-    static int event_id;
-    // set shared memory size, less than 100 default.
-    static int numMessages;
+  // enent_id - task
+  static std::map<int, struct task1> commTaskHash;
+  static int event_id;
+  // set shared memory size, less than 100 default.
+  static int numMessages;
 
-
-inline static bool comm_init() {
+  inline static bool comm_init() {
     int size = sizeof(MadronaMsg) * numMessages + sizeof(int);
     printf("size:%hd\n", size);
     shm_fd = shm_open("myshm", O_CREAT | O_RDWR, 0666);
@@ -85,14 +81,14 @@ inline static bool comm_init() {
     return true;
   }
 
-inline static void comm_send_wait_callback(
+  inline static void comm_send_wait_callback(
       int event_id,
       int time,
       int type,
-      int src ,
-      int dst ,
-      int size ,
-      int port ) {
+      int src,
+      int dst,
+      int size,
+      int port) {
     *header = 1;
     data = (MadronaMsg*)(header + 1); // jump count location.
     data[0].type = type;
@@ -106,22 +102,30 @@ inline static void comm_send_wait_callback(
     sem_post(semaphore_a);
     sem_wait(semaphore_b);
 
-    // only hanle one element event.
-    if (commTaskHash.find(data[0].event_id) != commTaskHash.end()) {
-      task1 t = commTaskHash[data[0].event_id];
-      commTaskHash.erase(data[0].event_id);
-      if (t.type == 0) {
-        // qp_finish(t.src, t.dest, data[0].port, data[0].size);
-        double t_relative=data[0].time-Simulator::Now().GetNanoSeconds();
-        printf("t_relative:%f\n",t_relative);
-        Simulator::Schedule(NanoSeconds(t_relative), &qp_finish, t.src, t.dest, data[0].port, data[0].size);
-      } else {
-        t.msg_handler(t.fun_arg);
+    if (GlobalResourceManager::commTaskHash.size() > 0) {
+      /* code */
+
+      // only hanle one element event.
+      if (commTaskHash.find(data[0].event_id) != commTaskHash.end()) {
+        task1 t = commTaskHash[data[0].event_id];
+        commTaskHash.erase(data[0].event_id);
+        if (t.type == 0) {
+          // qp_finish(t.src, t.dest, data[0].port, data[0].size);
+          double t_relative = data[0].time - Simulator::Now().GetNanoSeconds();
+          printf("t_relative:%f\n", t_relative);
+          Simulator::Schedule(
+              NanoSeconds(t_relative),
+              &qp_finish,
+              t.src,
+              t.dest,
+              data[0].port,
+              data[0].size);
+        } else {
+          t.msg_handler(t.fun_arg);
+        }
       }
     }
-
   }
-
 
   inline static void comm_send_wait_callback_multi() {
     MadronaMsg rst = comm_send_wait_immediately(0, 0, 11, 0, 0, 0, 0);
@@ -129,7 +133,7 @@ inline static void comm_send_wait_callback(
     std::vector<MadronaMsg> mv;
     // type 12 means return over.
     while (type != 12) {
-      MadronaMsg msg ;
+      MadronaMsg msg;
       msg.type = rst.type;
       msg.event_id = rst.event_id;
       msg.time = rst.time;
@@ -148,9 +152,15 @@ inline static void comm_send_wait_callback(
         commTaskHash.erase(val.event_id);
         if (t.type == 0) {
           // qp_finish(t.src, t.dest, val.port, val.size);
-          double t_relative=val.time-Simulator::Now().GetNanoSeconds();
-          printf("t_relative:%f\n",t_relative);
-          Simulator::Schedule(NanoSeconds(t_relative), &qp_finish, t.src, t.dest, val.port, val.size);
+          double t_relative = val.time - Simulator::Now().GetNanoSeconds();
+          printf("t_relative:%f\n", t_relative);
+          Simulator::Schedule(
+              NanoSeconds(t_relative),
+              &qp_finish,
+              t.src,
+              t.dest,
+              val.port,
+              val.size);
         } else {
           t.msg_handler(t.fun_arg);
         }
@@ -158,13 +168,13 @@ inline static void comm_send_wait_callback(
     }
   }
 
-inline static MadronaMsg comm_send_wait_immediately(
+  inline static MadronaMsg comm_send_wait_immediately(
       int event_id,
       int time,
       int type,
-      int src ,
-      int dst ,
-      int size ,
+      int src,
+      int dst,
+      int size,
       int port) {
     *header = numMessages;
     data = (MadronaMsg*)(header + 1); // jump count location.
@@ -177,7 +187,8 @@ inline static MadronaMsg comm_send_wait_immediately(
     data[0].port = port;
 
     // std::cout << "size: " << size << std::endl;
-    // std::cout << "AstraSim: Data written to Madrona: " << data[0] << std::endl;
+    // std::cout << "AstraSim: Data written to Madrona: " << data[0] <<
+    // std::endl;
 
     sem_post(semaphore_a);
     sem_wait(semaphore_b);
@@ -185,8 +196,7 @@ inline static MadronaMsg comm_send_wait_immediately(
     return data[0];
   }
 
-
-inline static void comm_close() {
+  inline static void comm_close() {
     munmap(data, sizeof(MadronaMsg) * numMessages);
     munmap(header, sizeof(int));
     shm_unlink("myshm");
@@ -196,8 +206,6 @@ inline static void comm_close() {
     sem_unlink("semB");
     close(shm_fd);
   }
-
-
 };
 
 // 静态变量初始化
