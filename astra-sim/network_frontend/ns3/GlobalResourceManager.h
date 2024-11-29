@@ -102,7 +102,7 @@ class GlobalResourceManager {
     sem_post(semaphore_a);
     sem_wait(semaphore_b);
 
-    if (GlobalResourceManager::commTaskHash.size() > 0) {
+    if (GlobalResourceManager::commTaskHash.size() > 0&& data[0].type==0) {
       /* code */
 
       // only hanle one element event.

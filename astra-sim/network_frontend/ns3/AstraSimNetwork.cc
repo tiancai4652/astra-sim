@@ -32,7 +32,7 @@ using namespace ns3;
 // std::vector<std::vector<int>> physical_dims{{8, 4}};
 // std::vector<string> workloads{"MLP_HybridParallel_Data_Model.txt"};
 std::vector<string> workloads{"MLP_HybridParallel_Data_Model.txt"};
-std::vector<std::vector<int>> physical_dims{{8, 1}};
+std::vector<std::vector<int>> physical_dims{{2, 1}};
 
 // // add for madrona
 // // enent_id - task
